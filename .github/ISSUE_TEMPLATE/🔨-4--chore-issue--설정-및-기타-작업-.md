@@ -1,6 +1,6 @@
 ---
-name: 설정 및 기타 작업 템플릿
-about: 설정 및 기타 작업을 할때 사용
+name: "\U0001F528 4. CHORE ISSUE (설정 및 기타 작업)"
+about: 설정 및 기타 작업 관련 이슈 템플릿
 title: ''
 labels: ''
 assignees: ''

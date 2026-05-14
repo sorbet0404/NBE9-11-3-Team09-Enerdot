@@ -1,6 +1,6 @@
 ---
-name: 문서 작성 및 수정
-about: 문서 작성 및 수정할때 사용
+name: "\U0001F4DD 5. DOCS ISSUE (문서 작성 및 수정)"
+about: README, Wiki, API 명세서 등 프로젝트 문서 관련 작업
 title: ''
 labels: ''
 assignees: ''

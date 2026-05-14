@@ -1,6 +1,6 @@
 ---
-name: 이슈 템플릿
-about: 기본 이슈 템플릿
+name: "✨ 1. FEATURE ISSUE (신규 기능 추가)"
+about: 기능 관련 이슈 템플릿
 title: ''
 labels: ''
 assignees: sorbet0404

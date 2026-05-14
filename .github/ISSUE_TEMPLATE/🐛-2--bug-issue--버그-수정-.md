@@ -1,6 +1,6 @@
 ---
-name: 버그용 템플릿
-about: 버그 수정시 사용
+name: "\U0001F41B 2. BUG ISSUE (버그 수정)"
+about: 버그 수정 관련 이슈 템플릿
 title: ''
 labels: ''
 assignees: ''

@@ -1,6 +1,6 @@
 ---
-name: 리팩토링 템플릿
-about: 리팩토링시 사용
+name: "♻️ 3. REFACTOR ISSUE (코드 구조 개선)"
+about: 코드 구조 개선 관련 이슈 템플릿
 title: ''
 labels: ''
 assignees: ''
