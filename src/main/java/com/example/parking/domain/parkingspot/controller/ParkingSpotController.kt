@@ -24,10 +24,10 @@ class ParkingSpotController(
 
     // [CUS-02] 예약 가능한 자리 조회
     @Operation(summary = "예약 가능한 자리 조회", description = "특정 주차장에서 현재 예약 가능한 주차 자리를 조회합니다.")
-    @ApiResponses(
+    @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "조회 완료"),
         ApiResponse(responseCode = "500", description = "서버 내부 오류")
-    )
+    ])
     @GetMapping("/{parkingLotId}/spots/available")
     fun getAvailableSpots(@PathVariable parkingLotId: Long): ResponseEntity<RsData<List<ParkingSpotDto>>> {
         val data = parkingSpotService.findAvailableSpots(parkingLotId)
@@ -36,10 +36,10 @@ class ParkingSpotController(
 
     // 주차장별 전체 자리 조회
     @Operation(summary = "전체 자리 조회", description = "특정 주차장의 모든 주차 자리 상태를 조회합니다.")
-    @ApiResponses(
+    @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "조회 완료"),
         ApiResponse(responseCode = "500", description = "서버 내부 오류")
-    )
+    ])
     @GetMapping("/{parkingLotId}/spots")
     fun getAllSpots(@PathVariable parkingLotId: Long): ResponseEntity<RsData<List<ParkingSpotDto>>> {
         val data = parkingSpotService.findAllSpots(parkingLotId)
@@ -47,9 +47,9 @@ class ParkingSpotController(
     }
 
     @Operation(summary = "자리 상태 SSE 구독", description = "특정 주차장의 자리 상태 변경을 실시간으로 수신합니다.")
-    @ApiResponses(
+    @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "구독 연결 완료")
-    )
+    ])
     @GetMapping("/{parkingLotId}/subscribe", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun subscribe(@PathVariable parkingLotId: Long): SseEmitter =
         parkingSpotService.subscribe(parkingLotId)
