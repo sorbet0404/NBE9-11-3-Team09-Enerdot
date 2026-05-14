@@ -1,40 +1,37 @@
-package com.example.parking.domain.reservation.dto
+package com.example.parking.domain.reservation.dto;
 
-import com.example.parking.domain.reservation.entity.Reservation
-import com.example.parking.domain.reservation.entity.ReservationStatus
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-import kotlin.math.ceil
+import com.example.parking.domain.reservation.entity.Reservation;
+import com.example.parking.domain.reservation.entity.ReservationStatus;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
-data class ReservationResDto(
-    val reservationId: Long,
-    val parkingLotId: Long,
-    val parkingSpotId: Long,
-    val parkingLotName: String,
-    val parkingSpotNumber: String,
-    val startTime: LocalDateTime,
-    val endTime: LocalDateTime,
-    val status: ReservationStatus,
-    val totalPrice: Int
+public record ReservationResDto(
+        Long reservationId,
+        Long parkingLotId,        // 추가
+        Long parkingSpotId,       // 추가
+        String parkingLotName,
+        String parkingSpotNumber,
+        LocalDateTime startTime,
+        LocalDateTime endTime,
+        ReservationStatus status,
+        Integer totalPrice        // 추가
 ) {
-    companion object {
-        fun from(reservation: Reservation): ReservationResDto {
-            val minutes = ChronoUnit.MINUTES.between(
+    public static ReservationResDto from(Reservation reservation) {
+        long minutes = ChronoUnit.MINUTES.between(
                 reservation.getStartTime(), reservation.getEndTime()
-            )
-            val price = ceil(minutes / 10.0).toInt() * reservation.getParkingLot().getPrice()
+        );
+        int price = (int) Math.ceil(minutes / 10.0) * reservation.getParkingLot().getPrice();
 
-            return ReservationResDto(
-                reservationId = reservation.getId(),
-                parkingLotId = reservation.getParkingLot().getId(),
-                parkingSpotId = reservation.getParkingSpot().getId(),
-                parkingLotName = reservation.getParkingLot().getName(),
-                parkingSpotNumber = reservation.getParkingSpot().getNumber(),
-                startTime = reservation.getStartTime(),
-                endTime = reservation.getEndTime(),
-                status = reservation.getStatus(),
-                totalPrice = price
-            )
-        }
+        return new ReservationResDto(
+                reservation.getId(),
+                reservation.getParkingLot().getId(),       // 추가
+                reservation.getParkingSpot().getId(),      // 추가
+                reservation.getParkingLot().getName(),
+                reservation.getParkingSpot().getNumber(),
+                reservation.getStartTime(),
+                reservation.getEndTime(),
+                reservation.getStatus(),
+                price                                      // 추가
+        );
     }
 }
