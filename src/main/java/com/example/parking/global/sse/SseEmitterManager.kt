@@ -32,7 +32,7 @@ class SseEmitterManager {
     }
 
     fun notify(parkingLotId: Long, data: Any) {
-        val list = emitters.getOrDefault(parkingLotId, CopyOnWriteArrayList())
+        val list = emitters[parkingLotId] ?: return
         val dead = mutableListOf<SseEmitter>()
 
         list.forEach { emitter ->
@@ -47,6 +47,9 @@ class SseEmitterManager {
     }
 
     private fun remove(parkingLotId: Long, emitter: SseEmitter) {
-        emitters[parkingLotId]?.remove(emitter)
+        emitters.computeIfPresent(parkingLotId) { _, list ->
+            list.remove(emitter)
+            if (list.isEmpty()) null else list  // null 반환 시 map에서 키 자체가 삭제됨
+        }
     }
 }

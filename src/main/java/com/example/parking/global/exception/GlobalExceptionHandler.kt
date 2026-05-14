@@ -18,28 +18,28 @@ class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgumentException(e: IllegalArgumentException): ResponseEntity<RsData<Void>> {
         log.warn("IllegalArgumentException: {}", e.message)
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(RsData(e.message, "400-1"))
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(RsData(e.message ?: "잘못된 요청입니다.", "400-1"))
     }
 
     // [CUS-03, CUS-05, ADM-01] 로직 수행 불가 상태 처리
     @ExceptionHandler(IllegalStateException::class)
     fun handleIllegalStateException(e: IllegalStateException): ResponseEntity<RsData<Void>> {
         log.warn("IllegalStateException: {}", e.message)
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(RsData(e.message, "409-1"))
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(RsData(e.message ?: "비정상적인 상태입니다.", "409-1"))
     }
 
     // [CUS-05] 권한 부족 처리
     @ExceptionHandler(SecurityException::class)
     fun handleSecurityException(e: SecurityException): ResponseEntity<RsData<Void>> {
         log.warn("SecurityException: {}", e.message)
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RsData(e.message, "403-1"))
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RsData(e.message ?: "권한이 없습니다.", "403-1"))
     }
 
     // [CUS-01] 외부 API 호출 실패 처리
     @ExceptionHandler(ExternalApiException::class)
     fun handleExternalApiException(e: ExternalApiException): ResponseEntity<RsData<Void>> {
         log.error("ExternalApiException: {}", e.message)
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(RsData(e.message, "502-1"))
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(RsData(e.message ?: "외부 API 호출에 실패했습니다.", "502-1"))
     }
 
     // 그 외 예상치 못한 모든 예외 처리
