@@ -101,7 +101,7 @@ public class ParkingSpotServiceTest {
 
     // then
     assertThat(result).hasSize(2);
-    assertThat(result.get(0).status()).isEqualTo(SpotStatus.AVAILABLE);
+    assertThat(result.get(0).status).isEqualTo(SpotStatus.AVAILABLE);
   }
 
   @Test
