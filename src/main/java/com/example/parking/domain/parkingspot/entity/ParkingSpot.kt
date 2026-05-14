@@ -1,6 +1,5 @@
+package com.example.parking.domain.parkingspot.entity
 import com.example.parking.domain.parkingLot.entity.ParkingLot
-import com.example.parking.domain.parkingspot.entity.SpotStatus
-import com.example.parking.domain.parkingspot.entity.SpotType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType

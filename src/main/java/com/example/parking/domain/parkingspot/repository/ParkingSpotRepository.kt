@@ -1,6 +1,6 @@
 package com.example.parking.domain.parkingspot.repository
 
-import ParkingSpot
+import com.example.parking.domain.parkingspot.entity.ParkingSpot
 import com.example.parking.domain.parkingspot.entity.SpotStatus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -35,4 +35,6 @@ interface ParkingSpotRepository : JpaRepository<ParkingSpot, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE ParkingSpot p SET p.status = 'AVAILABLE', p.reservedAt = null WHERE p.id = :id AND p.status = 'PAYING'")
     fun completePayment(@Param("id") id: Long): Int
+
+    fun findByParkingLotId(parkingLotId: Long): List<ParkingSpot>
 }

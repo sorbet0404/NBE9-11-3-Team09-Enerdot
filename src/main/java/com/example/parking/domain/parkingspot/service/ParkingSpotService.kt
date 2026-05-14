@@ -1,6 +1,6 @@
 package com.example.parking.domain.parkingspot.service
 
-import ParkingSpot
+import com.example.parking.domain.parkingspot.entity.ParkingSpot
 import com.example.parking.domain.parkingLot.entity.ParkingLot
 import com.example.parking.domain.parkingspot.dto.ParkingSpotDto
 import com.example.parking.domain.parkingspot.entity.SpotStatus
@@ -26,8 +26,7 @@ class ParkingSpotService(
 
     // [CUS-11] 모든 자리 반환
     fun findAllSpots(parkingLotId: Long): List<ParkingSpotDto> =
-        parkingSpotRepository.findAll()
-            .filter { it.parkingLot.id == parkingLotId }
+        parkingSpotRepository.findByParkingLotId(parkingLotId)
             .map { ParkingSpotDto(it) }
 
     // [CUS-11] 주차자리에 맞는 자리 생성
