@@ -14,7 +14,9 @@ class SseEmitterManager {
     fun subscribe(parkingLotId: Long): SseEmitter {
         val emitter = SseEmitter(60 * 60 * 1000L) // 1시간 타임아웃
 
-        emitters.computeIfAbsent(parkingLotId) { CopyOnWriteArrayList() }.add(emitter)
+        emitters.compute(parkingLotId) { _, list ->
+            (list ?: CopyOnWriteArrayList()).also { it.add(emitter) }
+        }
 
         // 연결 종료 시 제거
         emitter.onCompletion { remove(parkingLotId, emitter) }
@@ -43,7 +45,7 @@ class SseEmitterManager {
                 emitter.completeWithError(e)
             }
         }
-        list.removeAll(dead)
+        dead.forEach { remove(parkingLotId, it) }
     }
 
     private fun remove(parkingLotId: Long, emitter: SseEmitter) {
