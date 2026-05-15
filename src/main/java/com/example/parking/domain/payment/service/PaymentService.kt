@@ -36,7 +36,7 @@ class PaymentService(
 ) {
     private val log = LoggerFactory.getLogger(PaymentService::class.java)
 
-    @Transactional
+    // 1. 클래스 레벨 @Transactional 있으므로 메서드 레벨 중복 제거
     fun startPayment(request: PaymentReqDto, userId: Long): PaymentRespDto {
         val reservation = findReservation(request.reservationId)
         validateOwner(reservation, userId)
@@ -44,8 +44,9 @@ class PaymentService(
         validateDuplicatePayment(request.reservationId)
         validateAmount(reservation, request.amount)
 
+        // 2. 불필요한 !! 제거 (ParkingSpot.id는 Long 타입)
         val updatedCount = parkingSpotRepository.startPayment(
-            reservation.parkingSpot.id!!
+            reservation.parkingSpot.id
         )
 
         if (updatedCount == 0) {
@@ -53,7 +54,7 @@ class PaymentService(
             throw IllegalStateException("결제를 시작할 수 없는 상태입니다.")
         }
 
-        reservationService.startPaymentProcess(reservation.id!!)
+        reservationService.startPaymentProcess(reservation.id)
 
         val payment = Payment(
             reservation = reservation,
@@ -62,7 +63,7 @@ class PaymentService(
 
         paymentRepository.save(payment)
 
-        val spot = parkingSpotRepository.findById(reservation.parkingSpot.id!!)
+        val spot = parkingSpotRepository.findById(reservation.parkingSpot.id)
             .orElseThrow()
 
         sseEmitterManager.notify(spot.parkingLot.id!!, ParkingSpotDto(spot))
@@ -71,7 +72,6 @@ class PaymentService(
         return PaymentRespDto.from(payment)
     }
 
-    @Transactional
     fun approvePayment(paymentId: Long, userId: Long, tossRequest: TossConfirmReqDto): PaymentRespDto {
         val payment = paymentRepository.findById(paymentId)
             .orElseThrow {
@@ -93,11 +93,11 @@ class PaymentService(
         log.info("토스 결제 승인 완료 - paymentKey: {}, status: {}", tossResponse.paymentKey, tossResponse.status)
 
         payment.complete()
-        reservationService.completePayment(payment.reservation.id!!)
+        reservationService.completePayment(payment.reservation.id)
         entityManager.flush()
 
         val spot = parkingSpotRepository.findById(
-            payment.reservation.parkingSpot.id!!
+            payment.reservation.parkingSpot.id
         ).orElseThrow()
 
         sseEmitterManager.notify(spot.parkingLot.id!!, ParkingSpotDto(spot))
@@ -116,7 +116,6 @@ class PaymentService(
         paymentRepository.findAllByUserIdWithReservationAndUser(userId)
             .map { PaymentAdminRespDto.from(it) }
 
-    @Transactional
     fun refundPayment(paymentId: Long): PaymentRespDto {
         val payment = paymentRepository.findById(paymentId)
             .orElseThrow {
@@ -130,7 +129,7 @@ class PaymentService(
         entityManager.flush()
 
         val updatedCount = parkingSpotRepository.completePayment(
-            payment.reservation.parkingSpot.id!!
+            payment.reservation.parkingSpot.id
         )
 
         if (updatedCount == 0) {
@@ -140,7 +139,7 @@ class PaymentService(
         }
 
         val spot = parkingSpotRepository.findById(
-            payment.reservation.parkingSpot.id!!
+            payment.reservation.parkingSpot.id
         ).orElseThrow()
 
         sseEmitterManager.notify(spot.parkingLot.id!!, ParkingSpotDto(spot))
@@ -166,6 +165,7 @@ class PaymentService(
     }
 
     private fun validateReservationStatus(reservation: Reservation) {
+        // 3. else 제거 - when exhaustive
         when (reservation.status) {
             ReservationStatus.PENDING -> {}
             ReservationStatus.CONFIRMED -> {
@@ -180,7 +180,6 @@ class PaymentService(
                 log.warn("결제 실패 - 취소된 예약 reservationId: {}", reservation.id)
                 throw IllegalStateException("취소된 예약은 결제할 수 없습니다.")
             }
-            else -> {}
         }
     }
 
