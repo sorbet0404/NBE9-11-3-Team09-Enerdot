@@ -54,7 +54,7 @@ class PaymentService(
             throw IllegalStateException("결제를 시작할 수 없는 상태입니다.")
         }
 
-        reservationService.startPaymentProcess(reservation.id)
+        reservationService.startPaymentProcess(reservation.id!!)
 
         val payment = Payment(
             reservation = reservation,
@@ -93,7 +93,7 @@ class PaymentService(
         log.info("토스 결제 승인 완료 - paymentKey: {}, status: {}", tossResponse.paymentKey, tossResponse.status)
 
         payment.complete()
-        reservationService.completePayment(payment.reservation.id)
+        reservationService.completePayment(payment.reservation.id!!)
         entityManager.flush()
 
         val spot = parkingSpotRepository.findById(
