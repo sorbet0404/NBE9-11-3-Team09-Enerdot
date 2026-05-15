@@ -1,4 +1,4 @@
-// PaymentService.kt
+
 package com.example.parking.domain.payment.service
 
 import com.example.parking.domain.parkingspot.dto.ParkingSpotDto
@@ -36,7 +36,6 @@ class PaymentService(
 ) {
     private val log = LoggerFactory.getLogger(PaymentService::class.java)
 
-    // 1. 클래스 레벨 @Transactional 있으므로 메서드 레벨 중복 제거
     fun startPayment(request: PaymentReqDto, userId: Long): PaymentRespDto {
         val reservation = findReservation(request.reservationId)
         validateOwner(reservation, userId)
@@ -44,7 +43,6 @@ class PaymentService(
         validateDuplicatePayment(request.reservationId)
         validateAmount(reservation, request.amount)
 
-        // 2. 불필요한 !! 제거 (ParkingSpot.id는 Long 타입)
         val updatedCount = parkingSpotRepository.startPayment(
             reservation.parkingSpot.id
         )
@@ -165,7 +163,6 @@ class PaymentService(
     }
 
     private fun validateReservationStatus(reservation: Reservation) {
-        // 3. else 제거 - when exhaustive
         when (reservation.status) {
             ReservationStatus.PENDING -> {}
             ReservationStatus.CONFIRMED -> {
