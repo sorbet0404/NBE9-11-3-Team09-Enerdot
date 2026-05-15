@@ -89,7 +89,7 @@ class PaymentService(
             throw IllegalStateException("결제 진행 중인 상태만 승인할 수 있습니다.")
         }
 
-        val tossResponse = tossPaymentClient.confirm(tossRequest)
+        val tossResponse = tossPaymentClient.confirm(tossRequest, payment.idempotencyKey)
         log.info("토스 결제 승인 완료 - paymentKey: {}, status: {}", tossResponse.paymentKey, tossResponse.status)
 
         payment.complete()
