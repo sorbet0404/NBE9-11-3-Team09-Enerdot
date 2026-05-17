@@ -27,14 +27,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.springframework.test.util.ReflectionTestUtils
 import java.time.LocalDateTime
 import java.util.Optional
@@ -77,6 +76,7 @@ class PaymentServiceTest {
             address = "서울시",
             totalSpot = 10
         )
+        ReflectionTestUtils.setField(parkingLot, "price", 1000)
         ReflectionTestUtils.setField(parkingLot, "id", 1L)
 
         parkingSpot = ParkingSpot(
@@ -84,7 +84,7 @@ class PaymentServiceTest {
             number = "A-01",
             type = SpotType.SMALL
         )
-        ReflectionTestUtils.setField(parkingSpot, "id", 1L)
+        // parkingSpot.id = 0L (val이라 변경 불가, 0L로 매칭)
 
         reservation = Reservation.of(
             user = user,
@@ -117,15 +117,15 @@ class PaymentServiceTest {
         ReflectionTestUtils.setField(user, "id", userId)
         given(reservationRepository.findById(reservationId)).willReturn(Optional.of(reservation))
         given(paymentRepository.existsByReservationId(reservationId)).willReturn(false)
-        given(parkingSpotRepository.startPayment(anyLong())).willReturn(1)
-        given(parkingSpotRepository.findById(anyLong())).willReturn(Optional.of(parkingSpot))
-        given(paymentRepository.save(any(Payment::class.java))).willReturn(payment)
+        given(parkingSpotRepository.startPayment(eq(0L))).willReturn(1)
+        given(parkingSpotRepository.findById(eq(0L))).willReturn(Optional.of(parkingSpot))
+        given(paymentRepository.save(any())).willReturn(payment)
 
         val result = paymentService.startPayment(request, userId)
 
         assertThat(result).isNotNull()
-        verify(parkingSpotRepository).startPayment(anyLong())
-        verify(reservationService).startPaymentProcess(anyLong())
+        verify(parkingSpotRepository).startPayment(eq(0L))
+        verify(reservationService).startPaymentProcess(any())
     }
 
     @Test
@@ -214,7 +214,7 @@ class PaymentServiceTest {
         ReflectionTestUtils.setField(user, "id", userId)
         given(reservationRepository.findById(reservationId)).willReturn(Optional.of(reservation))
         given(paymentRepository.existsByReservationId(reservationId)).willReturn(false)
-        given(parkingSpotRepository.startPayment(anyLong())).willReturn(0)
+        given(parkingSpotRepository.startPayment(eq(0L))).willReturn(0)
 
         assertThatThrownBy { paymentService.startPayment(request, userId) }
             .isInstanceOf(IllegalStateException::class.java)
@@ -234,14 +234,14 @@ class PaymentServiceTest {
         ReflectionTestUtils.setField(user, "id", userId)
         ReflectionTestUtils.setField(payment, "status", PaymentStatus.PROCESSING)
         given(paymentRepository.findById(paymentId)).willReturn(Optional.of(payment))
-        given(tossPaymentClient.confirm(any(), anyString())).willReturn(tossResponse)
-        given(parkingSpotRepository.findById(anyLong())).willReturn(Optional.of(parkingSpot))
+        given(tossPaymentClient.confirm(any(), any())).willReturn(tossResponse)
+        given(parkingSpotRepository.findById(eq(0L))).willReturn(Optional.of(parkingSpot))
 
         val result = paymentService.approvePayment(paymentId, userId, tossRequest)
 
         assertThat(result).isNotNull()
-        verify(tossPaymentClient).confirm(any(), anyString())
-        verify(reservationService).completePayment(anyLong())
+        verify(tossPaymentClient).confirm(any(), any())
+        verify(reservationService).completePayment(any())
     }
 
     @Test
@@ -298,13 +298,13 @@ class PaymentServiceTest {
 
         ReflectionTestUtils.setField(payment, "status", PaymentStatus.COMPLETE)
         given(paymentRepository.findById(paymentId)).willReturn(Optional.of(payment))
-        given(parkingSpotRepository.completePayment(anyLong())).willReturn(1)
-        given(parkingSpotRepository.findById(anyLong())).willReturn(Optional.of(parkingSpot))
+        given(parkingSpotRepository.completePayment(eq(0L))).willReturn(1)
+        given(parkingSpotRepository.findById(eq(0L))).willReturn(Optional.of(parkingSpot))
 
         val result = paymentService.refundPayment(paymentId)
 
         assertThat(result).isNotNull()
-        verify(parkingSpotRepository).completePayment(anyLong())
+        verify(parkingSpotRepository).completePayment(eq(0L))
     }
 
     @Test
