@@ -18,6 +18,7 @@ import com.example.parking.domain.reservation.repository.ReservationRepository
 import com.example.parking.domain.reservation.service.ReservationService
 import com.example.parking.domain.user.entity.User
 import com.example.parking.domain.user.entity.UserRole
+import com.example.parking.domain.user.entity.VehicleType
 import com.example.parking.global.sse.SseEmitterManager
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -59,48 +61,49 @@ class PaymentServiceTest {
 
     @BeforeEach
     fun setUp() {
-        user = User.builder()
-                .email("test@test.com")
-                .password("1234")
-                .name("테스트")
-                .role(UserRole.USER)
-                .build()
+        user = User(
+            email = "test@test.com",
+            password = "1234",
+            name = "테스트",
+            plateNumber = "12가3456",
+            vehicleType = VehicleType.SMALL,
+            role = UserRole.USER
+        )
         ReflectionTestUtils.setField(user, "id", 1L)
 
-        parkingLot = ParkingLot.builder()
-                .name("테스트 주차장")
-                .address("서울시")
-                .price(1000)
-                .totalSpot(10)
-                .build()
+        parkingLot = ParkingLot.of(
+            externalId = "test-001",
+            name = "테스트 주차장",
+            address = "서울시",
+            totalSpot = 10
+        )
         ReflectionTestUtils.setField(parkingLot, "id", 1L)
 
-        parkingSpot = ParkingSpot.builder()
-                .parkingLot(parkingLot)
-                .number("A-01")
-                .type(SpotType.SMALL)
-                .build()
+        parkingSpot = ParkingSpot(
+            parkingLot = parkingLot,
+            number = "A-01",
+            type = SpotType.SMALL
+        )
         ReflectionTestUtils.setField(parkingSpot, "id", 1L)
 
-        reservation = Reservation.builder()
-                .user(user)
-                .parkingLot(parkingLot)
-                .parkingSpot(parkingSpot)
-                .startTime(LocalDateTime.now().minusHours(1))
-                .endTime(LocalDateTime.now().plusHours(1))
-                .status(ReservationStatus.PENDING)
-                .build()
+        reservation = Reservation.of(
+            user = user,
+            parkingLot = parkingLot,
+            parkingSpot = parkingSpot,
+            startTime = LocalDateTime.now().minusHours(1),
+            endTime = LocalDateTime.now().plusHours(1)
+        )
         ReflectionTestUtils.setField(reservation, "id", 1L)
 
         payment = Payment(
-                reservation = reservation,
-                amount = 12000
+            reservation = reservation,
+            amount = 12000
         )
         ReflectionTestUtils.setField(payment, "id", 1L)
     }
 
     private fun createRequest(reservationId: Long, amount: Int): PaymentReqDto =
-    PaymentReqDto(reservationId = reservationId, amount = amount)
+        PaymentReqDto(reservationId = reservationId, amount = amount)
 
     // ==================== startPayment 테스트 ====================
 
@@ -226,18 +229,18 @@ class PaymentServiceTest {
         val paymentId = 1L
         val userId = 1L
         val tossRequest = TossConfirmReqDto("paymentKey", "orderId", 1000)
-        val tossResponse = TossConfirmResDto()
+        val tossResponse = TossConfirmResDto(paymentKey = "paymentKey", status = "DONE")
 
         ReflectionTestUtils.setField(user, "id", userId)
         ReflectionTestUtils.setField(payment, "status", PaymentStatus.PROCESSING)
         given(paymentRepository.findById(paymentId)).willReturn(Optional.of(payment))
-        given(tossPaymentClient.confirm(any())).willReturn(tossResponse)
+        given(tossPaymentClient.confirm(any(), anyString())).willReturn(tossResponse)
         given(parkingSpotRepository.findById(anyLong())).willReturn(Optional.of(parkingSpot))
 
         val result = paymentService.approvePayment(paymentId, userId, tossRequest)
 
         assertThat(result).isNotNull()
-        verify(tossPaymentClient).confirm(any())
+        verify(tossPaymentClient).confirm(any(), anyString())
         verify(reservationService).completePayment(anyLong())
     }
 
