@@ -1,7 +1,8 @@
-package com.example.parking.domain.parkingLot.dto
+package com.example.parking.domain.parkingLot.external.dto
 
 import com.example.parking.domain.parkingLot.repository.NearbyParkingLotProjection
 import java.time.LocalTime
+import kotlin.math.roundToInt
 
 data class NearbyParkingLotResDto(
     val id: Long,
@@ -13,7 +14,7 @@ data class NearbyParkingLotResDto(
     val operationEndTime: LocalTime,
     val latitude: Double,
     val longitude: Double,
-    val distance: Int  // 미터, 정수로 반올림
+    val distance: Int
 ) {
     companion object {
         fun from(p: NearbyParkingLotProjection) = NearbyParkingLotResDto(
@@ -26,7 +27,7 @@ data class NearbyParkingLotResDto(
             operationEndTime = p.getOperationEndTime(),
             latitude = p.getLatitude(),
             longitude = p.getLongitude(),
-            distance = p.getDistance().toInt()
+            distance = p.getDistance().roundToInt()
         )
     }
 }

@@ -1,6 +1,6 @@
 package com.example.parking.domain.parkingLot.service
 
-import com.example.parking.domain.parkingLot.dto.NearbyParkingLotResDto
+import com.example.parking.domain.parkingLot.external.dto.NearbyParkingLotResDto
 import com.example.parking.domain.parkingLot.external.dto.ParkingLotResDto
 import com.example.parking.domain.parkingLot.repository.ParkingLotRepository
 import org.springframework.cache.annotation.Cacheable

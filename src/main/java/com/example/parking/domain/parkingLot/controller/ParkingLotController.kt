@@ -1,6 +1,6 @@
 package com.example.parking.domain.parkingLot.controller
 
-import com.example.parking.domain.parkingLot.dto.NearbyParkingLotResDto
+import com.example.parking.domain.parkingLot.external.dto.NearbyParkingLotResDto
 import com.example.parking.domain.parkingLot.external.dto.ParkingLotResDto
 import com.example.parking.domain.parkingLot.service.ParkingLotService
 import com.example.parking.global.response.RsData
