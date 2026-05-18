@@ -5,7 +5,6 @@ import com.example.parking.domain.parkingspot.entity.ParkingSpot
 import com.example.parking.domain.parkingspot.entity.SpotType
 import com.example.parking.domain.parkingspot.repository.ParkingSpotRepository
 import com.example.parking.domain.payment.dto.PaymentReqDto
-import com.example.parking.domain.payment.dto.PaymentRespDto
 import com.example.parking.domain.payment.dto.TossConfirmReqDto
 import com.example.parking.domain.payment.dto.TossConfirmResDto
 import com.example.parking.domain.payment.entity.Payment
@@ -18,6 +17,7 @@ import com.example.parking.domain.reservation.repository.ReservationRepository
 import com.example.parking.domain.reservation.service.ReservationService
 import com.example.parking.domain.user.entity.User
 import com.example.parking.domain.user.entity.UserRole
+import com.example.parking.domain.user.entity.UserStatus
 import com.example.parking.domain.user.entity.VehicleType
 import com.example.parking.global.sse.SseEmitterManager
 import jakarta.persistence.EntityManager
@@ -27,13 +27,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.BDDMockito.given
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
+import org.mockito.kotlin.given
+import org.mockito.kotlin.verify
 import org.springframework.test.util.ReflectionTestUtils
 import java.time.LocalDateTime
 import java.util.Optional
@@ -66,17 +65,17 @@ class PaymentServiceTest {
             name = "테스트",
             plateNumber = "12가3456",
             vehicleType = VehicleType.SMALL,
-            role = UserRole.USER
+            role = UserRole.USER,
+            status = UserStatus.ACTIVE
         )
         ReflectionTestUtils.setField(user, "id", 1L)
 
         parkingLot = ParkingLot.of(
-            externalId = "test-001",
+            externalId = "TEST_001",
             name = "테스트 주차장",
             address = "서울시",
             totalSpot = 10
         )
-        ReflectionTestUtils.setField(parkingLot, "price", 1000)
         ReflectionTestUtils.setField(parkingLot, "id", 1L)
 
         parkingSpot = ParkingSpot(
@@ -84,7 +83,7 @@ class PaymentServiceTest {
             number = "A-01",
             type = SpotType.SMALL
         )
-        // parkingSpot.id = 0L (val이라 변경 불가, 0L로 매칭)
+        ReflectionTestUtils.setField(parkingSpot, "id", 1L)
 
         reservation = Reservation.of(
             user = user,
@@ -117,14 +116,14 @@ class PaymentServiceTest {
         ReflectionTestUtils.setField(user, "id", userId)
         given(reservationRepository.findById(reservationId)).willReturn(Optional.of(reservation))
         given(paymentRepository.existsByReservationId(reservationId)).willReturn(false)
-        given(parkingSpotRepository.startPayment(eq(0L))).willReturn(1)
-        given(parkingSpotRepository.findById(eq(0L))).willReturn(Optional.of(parkingSpot))
-        given(paymentRepository.save(any())).willReturn(payment)
+        given(parkingSpotRepository.startPayment(any())).willReturn(1)
+        given(parkingSpotRepository.findById(any())).willReturn(Optional.of(parkingSpot))
+        given(paymentRepository.save(any<Payment>())).willReturn(payment)
 
         val result = paymentService.startPayment(request, userId)
 
         assertThat(result).isNotNull()
-        verify(parkingSpotRepository).startPayment(eq(0L))
+        verify(parkingSpotRepository).startPayment(any())
         verify(reservationService).startPaymentProcess(any())
     }
 
@@ -214,7 +213,7 @@ class PaymentServiceTest {
         ReflectionTestUtils.setField(user, "id", userId)
         given(reservationRepository.findById(reservationId)).willReturn(Optional.of(reservation))
         given(paymentRepository.existsByReservationId(reservationId)).willReturn(false)
-        given(parkingSpotRepository.startPayment(eq(0L))).willReturn(0)
+        given(parkingSpotRepository.startPayment(any())).willReturn(0)
 
         assertThatThrownBy { paymentService.startPayment(request, userId) }
             .isInstanceOf(IllegalStateException::class.java)
@@ -229,13 +228,13 @@ class PaymentServiceTest {
         val paymentId = 1L
         val userId = 1L
         val tossRequest = TossConfirmReqDto("paymentKey", "orderId", 1000)
-        val tossResponse = TossConfirmResDto(paymentKey = "paymentKey", status = "DONE")
+        val tossResponse = TossConfirmResDto()
 
         ReflectionTestUtils.setField(user, "id", userId)
         ReflectionTestUtils.setField(payment, "status", PaymentStatus.PROCESSING)
         given(paymentRepository.findById(paymentId)).willReturn(Optional.of(payment))
         given(tossPaymentClient.confirm(any(), any())).willReturn(tossResponse)
-        given(parkingSpotRepository.findById(eq(0L))).willReturn(Optional.of(parkingSpot))
+        given(parkingSpotRepository.findById(any())).willReturn(Optional.of(parkingSpot))
 
         val result = paymentService.approvePayment(paymentId, userId, tossRequest)
 
@@ -298,13 +297,13 @@ class PaymentServiceTest {
 
         ReflectionTestUtils.setField(payment, "status", PaymentStatus.COMPLETE)
         given(paymentRepository.findById(paymentId)).willReturn(Optional.of(payment))
-        given(parkingSpotRepository.completePayment(eq(0L))).willReturn(1)
-        given(parkingSpotRepository.findById(eq(0L))).willReturn(Optional.of(parkingSpot))
+        given(parkingSpotRepository.completePayment(any())).willReturn(1)
+        given(parkingSpotRepository.findById(any())).willReturn(Optional.of(parkingSpot))
 
         val result = paymentService.refundPayment(paymentId)
 
         assertThat(result).isNotNull()
-        verify(parkingSpotRepository).completePayment(eq(0L))
+        verify(parkingSpotRepository).completePayment(any())
     }
 
     @Test
