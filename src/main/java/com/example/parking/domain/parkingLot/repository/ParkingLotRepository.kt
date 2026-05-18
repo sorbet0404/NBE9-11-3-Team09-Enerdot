@@ -36,11 +36,11 @@ interface ParkingLotRepository : JpaRepository<ParkingLot, Long> {
               AND MBRContains(
                     ST_Buffer(
                       ST_SRID(POINT(:lng, :lat), 4326),
-                      :radius / 111000.0
+                      :radius
                     ),
                     p.location
                   )
-              AND ST_Distance_Sphere(
+              AND ST_Distance(
                     p.location,
                     ST_SRID(POINT(:lng, :lat), 4326)
                   ) <= :radius

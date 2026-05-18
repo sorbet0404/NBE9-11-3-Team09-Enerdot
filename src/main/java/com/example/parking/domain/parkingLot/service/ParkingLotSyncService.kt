@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheEvict
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.locationtech.jts.geom.Point
 
 /*
@@ -25,12 +24,10 @@ import org.locationtech.jts.geom.Point
 - 최종적으로 DB에 반영
 */
 @Service
-@Transactional
 class ParkingLotSyncService(
     private val parkingOpenApiClient: ParkingOpenApiClient,
-    private val parkingLotRepository: ParkingLotRepository,
-    private val parkingSpotService: ParkingSpotService,
-    private val kakaoGeocodingClient: KakaoGeocodingClient,  // ⭐ 추가
+    private val parkingLotWriter: ParkingLotWriter,
+    private val kakaoGeocodingClient: KakaoGeocodingClient,
     @Value("\${kakao.rest-api-key}") private val kakaoApiKey: String
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -62,32 +59,13 @@ class ParkingLotSyncService(
 
             val location = resolveLocation(item.lat, item.lot, address)
 
-            parkingLotRepository.findByExternalId(externalId)
-                .ifPresentOrElse(
-                    { parkingLot ->
-                        parkingLot.updateInfo(
-                            name = name,
-                            address = address,
-                            totalSpot = totalSpot,
-                            location = location
-                        )
-                    },
-                    {
-                        val saved = parkingLotRepository.save(
-                            ParkingLot.of(
-                                externalId = externalId,
-                                name = name,
-                                address = address,
-                                totalSpot = totalSpot,
-                                location = location
-                            )
-                        )
-
-                        if (totalSpot > 0) {
-                            parkingSpotService.createSpots(saved, totalSpot)
-                        }
-                    }
-                )
+            parkingLotWriter.saveOrUpdate(
+                externalId = externalId,
+                name = name,
+                address = address,
+                totalSpot = totalSpot,
+                location = location
+            )
         }
     }
 
