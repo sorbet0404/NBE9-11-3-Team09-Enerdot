@@ -19,6 +19,8 @@ import com.example.parking.domain.reservation.service.ReservationService
 import com.example.parking.global.sse.SseEmitterManager
 import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.temporal.ChronoUnit
@@ -99,18 +101,18 @@ class PaymentService(
     }
 
     @Transactional(readOnly = true)
-    fun getAllPayments(): List<PaymentAdminRespDto> =
-        paymentRepository.findAllWithReservationAndUser()
+    fun getAllPayments(pageable: Pageable): Page<PaymentAdminRespDto> =
+        paymentRepository.findAllWithReservationAndUserPaged(pageable)
             .map { PaymentAdminRespDto.from(it) }
 
     @Transactional(readOnly = true)
-    fun getPaymentsByUser(userId: Long): List<PaymentAdminRespDto> =
-        paymentRepository.findAllByUserIdWithReservationAndUser(userId)
+    fun getPaymentsByUser(userId: Long, pageable: Pageable): Page<PaymentAdminRespDto> =
+        paymentRepository.findAllByUserIdWithReservationAndUserPaged(userId, pageable)
             .map { PaymentAdminRespDto.from(it) }
 
     @Transactional(readOnly = true)
-    fun getPaymentsByStatus(status: PaymentStatus): List<PaymentAdminRespDto> =
-        paymentRepository.findAllByStatus(status)
+    fun getPaymentsByStatus(status: PaymentStatus, pageable: Pageable): Page<PaymentAdminRespDto> =
+        paymentRepository.findAllByStatusPaged(status, pageable)
             .map { PaymentAdminRespDto.from(it) }
 
     fun refundPayment(paymentId: Long): PaymentRespDto {
