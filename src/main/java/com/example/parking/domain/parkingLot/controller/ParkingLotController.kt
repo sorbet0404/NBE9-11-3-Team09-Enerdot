@@ -1,12 +1,15 @@
 package com.example.parking.domain.parkingLot.controller
 
-import com.example.parking.domain.parkingLot.dto.ParkingLotResDto
+import com.example.parking.domain.parkingLot.external.dto.NearbyParkingLotResDto
+import com.example.parking.domain.parkingLot.external.dto.ParkingLotResDto
 import com.example.parking.domain.parkingLot.service.ParkingLotService
 import com.example.parking.global.response.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -29,10 +32,11 @@ class ParkingLotController(
     @GetMapping
     fun getParkingLots(
         @RequestParam(required = false)
-        dong: String?
-    ): ResponseEntity<RsData<List<ParkingLotResDto>>> {
+        keyword: String?,
+        pageable: Pageable
+    ): ResponseEntity<RsData<Page<ParkingLotResDto>>> {
 
-        val data = parkingLotService.findAll(dong)
+        val data = parkingLotService.findAll(keyword, pageable)
 
         return ResponseEntity.ok(
             RsData(
@@ -63,6 +67,32 @@ class ParkingLotController(
             RsData(
                 "주차장 상세 조회가 완료되었습니다.",
                 "200-2",
+                data
+            )
+        )
+    }
+
+    @Operation(
+        summary = "주변 주차장 검색",
+        description = "사용자 위치(위도/경도) 기준 반경 내 주차장을 가까운 순으로 조회합니다."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "조회 완료"),
+        ApiResponse(responseCode = "400", description = "잘못된 좌표/반경")
+    )
+    @GetMapping("/nearby")
+    fun getNearbyParkingLots(
+        @RequestParam lat: Double,
+        @RequestParam lng: Double,
+        @RequestParam(defaultValue = "1000") radius: Int
+    ): ResponseEntity<RsData<List<NearbyParkingLotResDto>>> {
+
+        val data = parkingLotService.findNearby(lat, lng, radius)
+
+        return ResponseEntity.ok(
+            RsData(
+                "주변 주차장 조회가 완료되었습니다.",
+                "200-3",
                 data
             )
         )
