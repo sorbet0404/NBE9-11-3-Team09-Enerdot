@@ -21,7 +21,5 @@ interface PaymentRepository : JpaRepository<Payment, Long>, PaymentRepositoryCus
 
     fun findByStatusAndCreatedAtBefore(status: PaymentStatus, dateTime: LocalDateTime): List<Payment>
 
-    fun findByReservationParkingSpotIdAndStatus(parkingSpotId: Long, status: PaymentStatus): Optional<Payment>
-
     fun findByReservationId(reservationId: Long): Optional<Payment>
 }
