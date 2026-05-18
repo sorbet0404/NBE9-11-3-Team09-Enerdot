@@ -6,13 +6,17 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.util.*
 
-interface ParkingLotRepository : JpaRepository<ParkingLot, Long> {
+interface ParkingLotRepository : JpaRepository<ParkingLot, Long>, ParkingLotRepositoryCustom {
 
     // 외부 API 주차장 식별값으로 조회
     fun findByExternalId(externalId: String): Optional<ParkingLot>
 
     // 주소(동) 기준 주차장 검색
-    fun findByAddressContaining(dong: String): List<ParkingLot>
+//    fun findByNameContainingOrAddressContaining(
+//        name: String,
+//        address: String,
+//        pageable: Pageable
+//    ): Page<ParkingLot>
 
     // 반경 검색 - native query (공간 인덱스 활용)
     @Query(
