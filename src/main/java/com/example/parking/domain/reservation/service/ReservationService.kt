@@ -25,6 +25,7 @@ import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.Clock
 
 @Service
 @Transactional(readOnly = true)
@@ -37,7 +38,8 @@ class ReservationService(
     private val taskScheduler: TaskScheduler,
     private val reservationServiceProvider: ObjectProvider<ReservationService>,
     private val paymentRepository: PaymentRepository,
-    private val sseEmitterManager: SseEmitterManager
+    private val sseEmitterManager: SseEmitterManager,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) {
     private val log = LoggerFactory.getLogger(ReservationService::class.java)
 
@@ -67,7 +69,7 @@ class ReservationService(
             if (userId == null || reservation.user.id != userId) {
                 throw IllegalArgumentException("해당 예약을 취소할 권한이 없습니다.")
             }
-            if (LocalDateTime.now().isAfter(reservation.startTime.minusMinutes(30))) {
+            if (LocalDateTime.now(clock).isAfter(reservation.startTime.minusMinutes(30))) {
                 throw IllegalStateException("입차 30분 전까지만 취소가 가능합니다.")
             }
         }
@@ -82,7 +84,7 @@ class ReservationService(
         reservation.cancel()
 
         val spot = reservation.parkingSpot
-        if (spot.status != SpotStatus.AVAILABLE && reservation.startTime.isBefore(LocalDateTime.now())) {
+        if (spot.status != SpotStatus.AVAILABLE && reservation.startTime.isBefore(LocalDateTime.now(clock))) {
             spot.release()
             val lotId = checkNotNull(spot.parkingLot.id)
             TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
@@ -125,7 +127,7 @@ class ReservationService(
 // ==================== private 메서드 ====================
 
     private fun validateTime(start: LocalDateTime, end: LocalDateTime) {
-        if (start.isBefore(LocalDateTime.now())) {
+        if (start.isBefore(LocalDateTime.now(clock))) {
             throw IllegalArgumentException("과거 시간으로 예약할 수 없습니다.")
         }
         if (end.isBefore(start)) {
@@ -134,7 +136,7 @@ class ReservationService(
     }
 
     private fun validateReservationOpenTime() {
-        val hour = LocalDateTime.now().hour
+        val hour = LocalDateTime.now(clock).hour
         if (hour < 22) {
             throw IllegalStateException("예약은 매일 22시부터 24시까지만 가능합니다.")
         }
@@ -175,7 +177,7 @@ class ReservationService(
 
     private fun reserveSpot(parkingSpot: ParkingSpot, spotId: Long): ParkingSpot {
         val updated = parkingSpotRepository.tryReserve(
-            checkNotNull(parkingSpot.id), LocalDateTime.now()
+            checkNotNull(parkingSpot.id), LocalDateTime.now(clock)
         )
         if (updated == 0) {
             throw IllegalStateException("방금 다른 사용자가 선점했습니다. 다른 자리를 선택해주세요.")
