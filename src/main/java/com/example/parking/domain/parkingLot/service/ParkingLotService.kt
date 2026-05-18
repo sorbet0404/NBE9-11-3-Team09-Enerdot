@@ -4,6 +4,8 @@ import com.example.parking.domain.parkingLot.external.dto.NearbyParkingLotResDto
 import com.example.parking.domain.parkingLot.external.dto.ParkingLotResDto
 import com.example.parking.domain.parkingLot.repository.ParkingLotRepository
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,13 +17,12 @@ class ParkingLotService(
 ) {
 
     // [CUS-01] 전체 주차장 조회, 동 검색
-    @Cacheable(value = ["parkingLots"], key = "#dong == null || #dong.isBlank() ? 'all' : #dong")
-    fun findAll(dong: String?): List<ParkingLotResDto> {
-        val parkingLots = if (dong.isNullOrBlank()) {
-            parkingLotRepository.findAll()
-        } else {
-            parkingLotRepository.findByAddressContaining(dong)
-        }
+    @Cacheable(
+        value = ["parkingLots"],
+        key = "(#keyword == null || #keyword.isBlank() ? 'all' : #keyword) + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()"
+    )
+    fun findAll(keyword: String?, pageable: Pageable): Page<ParkingLotResDto> {
+        val parkingLots = parkingLotRepository.search(keyword, pageable)
 
         return parkingLots.map { ParkingLotResDto.from(it) }
     }

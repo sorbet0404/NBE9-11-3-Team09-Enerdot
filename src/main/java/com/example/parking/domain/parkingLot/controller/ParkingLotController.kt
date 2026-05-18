@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -30,10 +32,11 @@ class ParkingLotController(
     @GetMapping
     fun getParkingLots(
         @RequestParam(required = false)
-        dong: String?
-    ): ResponseEntity<RsData<List<ParkingLotResDto>>> {
+        keyword: String?,
+        pageable: Pageable
+    ): ResponseEntity<RsData<Page<ParkingLotResDto>>> {
 
-        val data = parkingLotService.findAll(dong)
+        val data = parkingLotService.findAll(keyword, pageable)
 
         return ResponseEntity.ok(
             RsData(
