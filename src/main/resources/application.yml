@@ -1,30 +1,42 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
+  profiles:
+    active: test
   datasource:
-    url: jdbc:mysql://localhost:3306/parkingdb?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3307/parkingdb_test?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
-  h2:
-    console:
-      enabled: false
-
+    username: root
+    password: test
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     properties:
       hibernate:
-        generate_statistics: true
         show_sql: true
         format_sql: true
         default_batch_fetch_size: 100
         dialect: org.hibernate.dialect.MySQLDialect
-  logging:
-    level:
-      org.hibernate.stat: DEBUG
-
   jwt:
-    # 주의: 실제 배포할 땐 아주 길고 복잡한 무작위 문자열을 써야 합니다! (최소 256비트 이상)
-    secret: ${JWT_SECRET}
-  profiles:
-    active: local
+    secret: test-secret-key-for-testing-purpose-only-must-be-long-enough-256bit
+
+toss:
+  payment:
+    secret-key: test-secret
+    url: https://api.tosspayments.com/v1/payments/confirm
+
+openapi:
+  seoul:
+    key: test-api-key
+
+app:
+  admin:
+    email: admin@test.com
+    password: admin1234
+    name: 관리자
+    plate-number: 00관0000
+    vehicle-type: SMALL
+
+JWT_SECRET: test-secret-key-for-testing-purpose-only-must-be-long-enough-256bit
+DB_USERNAME: root
+DB_PASSWORD: test

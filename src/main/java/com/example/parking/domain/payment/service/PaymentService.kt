@@ -1,3 +1,4 @@
+
 package com.example.parking.domain.payment.service
 
 import com.example.parking.domain.parkingspot.dto.ParkingSpotDto
@@ -105,6 +106,11 @@ class PaymentService(
     @Transactional(readOnly = true)
     fun getPaymentsByUser(userId: Long): List<PaymentAdminRespDto> =
         paymentRepository.findAllByUserIdWithReservationAndUser(userId)
+            .map { PaymentAdminRespDto.from(it) }
+
+    @Transactional(readOnly = true)
+    fun getPaymentsByStatus(status: PaymentStatus): List<PaymentAdminRespDto> =
+        paymentRepository.findAllByStatus(status)
             .map { PaymentAdminRespDto.from(it) }
 
     fun refundPayment(paymentId: Long): PaymentRespDto {
