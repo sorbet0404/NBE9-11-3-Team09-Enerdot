@@ -1,45 +1,31 @@
 plugins {
-    id 'java'                                                   // [3단계 완료 후 이 줄 제거]
+    id 'java'
     id 'org.springframework.boot' version '4.0.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.jetbrains.kotlin.jvm' version '2.3.0'
     id 'org.jetbrains.kotlin.plugin.spring' version '2.3.0'
     id 'org.jetbrains.kotlin.plugin.jpa' version '2.3.0'
-    id 'com.google.devtools.ksp' version '2.3.0' // QueryDSL Q클래스 생성용
+    id 'com.google.devtools.ksp' version '2.3.0'
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 description = 'parking'
 
-// [3단계 완료 후 이 블록 전체 제거]
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
-// ============================================================
-// kotlin 설정
-// - sourceSets.main : 지금 당장부터 유지 (Q클래스 경로 등록)
-// - jvmToolchain, compilerOptions : [3단계 완료 후 주석 해제]
-// ============================================================
 kotlin {
-    // [3단계 완료 후 주석 해제]
     jvmToolchain(25)
-    // compilerOptions {
-    //     freeCompilerArgs.addAll(["-Xjsr305=strict"])
-    // }
 
-    // 지금 당장부터 유지 - KSP가 생성한 Q클래스 경로 등록
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main/kotlin")
     }
 }
 
-// ============================================================
-// [3단계 완료 후 주석 해제] - JPA Entity final 문제 해결
-// ============================================================
 // allOpen {
 //     annotation("jakarta.persistence.Entity")
 //     annotation("jakarta.persistence.MappedSuperclass")
@@ -51,52 +37,28 @@ repositories {
 }
 
 dependencies {
-    // =========================================================
-    // 핵심 스타터 (변경 없음)
-    // =========================================================
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
 
-    // =========================================================
-    // Swagger (변경 없음)
-    // =========================================================
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
 
-    // =========================================================
-    // DB (변경 없음)
-    // =========================================================
     runtimeOnly 'com.mysql:mysql-connector-j'
 
-    // =========================================================
-    // JWT (변경 없음)
-    // =========================================================
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
-    // =========================================================
-    // Kotlin 필수 의존성 (지금 당장부터 유지)
-    // =========================================================
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
 
-    // =========================================================
-    // QueryDSL (지금 당장부터 유지)
-    // 주의: :jakarta 빠뜨리면 javax/jakarta 충돌로 빌드 터짐
-    // =========================================================
     def queryDslVersion = '7.1'
     implementation "io.github.openfeign.querydsl:querydsl-jpa:${queryDslVersion}"
-    ksp "io.github.openfeign.querydsl:querydsl-ksp-codegen:${queryDslVersion}"  // :jakarta 제거
+    ksp "io.github.openfeign.querydsl:querydsl-ksp-codegen:${queryDslVersion}"
 
-    // =========================================================
-    // Lombok
-    // [2단계] .java → .kt 전환할 때마다 해당 파일 Lombok 어노테이션 제거
-    // [3단계] 모든 파일 .kt 전환 완료 후 아래 4줄 전부 제거
-    // =========================================================
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
@@ -105,9 +67,6 @@ dependencies {
     testImplementation 'com.h2database:h2'
     testImplementation 'org.mockito.kotlin:mockito-kotlin:5.2.1'
 
-    // =========================================================
-    // 테스트 (변경 없음)
-    // =========================================================
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.mockito.kotlin:mockito-kotlin:5.2.1'
