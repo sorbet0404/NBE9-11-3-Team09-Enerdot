@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.security.MessageDigest
 
 @Service
 @Transactional(readOnly = true)
@@ -25,11 +26,13 @@ class AuthService(
 ) {
     @Transactional
     fun login(reqDto: LoginReqDto): LoginResDto {
+        val loginFailMessage = "이메일 또는 비밀번호가 올바르지 않습니다."
+
         val user = userRepository.findByEmail(reqDto.userEmail)
-            .orElseThrow { IllegalArgumentException("존재하지 않는 이메일입니다.") }
+            .orElseThrow { IllegalArgumentException(loginFailMessage) }
 
         if (!passwordEncoder.matches(reqDto.password, user.password)) {
-            throw IllegalArgumentException("비밀번호가 일치하지 않습니다.")
+            throw IllegalArgumentException(loginFailMessage)
         }
 
         if (user.status != UserStatus.ACTIVE) {
@@ -66,7 +69,9 @@ class AuthService(
             throw IllegalArgumentException("refresh token이 아닙니다.")
         }
 
-        val savedToken = refreshTokenRepository.findByToken(refreshTokenValue)
+        val refreshTokenHash = hashRefreshToken(refreshTokenValue)
+
+        val savedToken = refreshTokenRepository.findByToken(refreshTokenHash)
             .orElseThrow { IllegalArgumentException("저장된 refresh token이 없습니다.") }
 
         val userId = jwtUtil.getUserId(refreshTokenValue)
@@ -109,21 +114,29 @@ class AuthService(
             jwtUtil.getExpiration(refreshToken).toInstant(),
             ZoneId.systemDefault()
         )
+        val refreshTokenHash = hashRefreshToken(refreshToken)
 
         refreshTokenRepository.findByUserId(userId)
             .ifPresentOrElse(
                 { savedToken ->
-                    savedToken.updateToken(refreshToken, expiresAt)
+                    savedToken.updateToken(refreshTokenHash, expiresAt)
                 },
                 {
                     refreshTokenRepository.save(
                         RefreshToken.of(
                             userId = userId,
-                            token = refreshToken,
+                            token = refreshTokenHash,
                             expiresAt = expiresAt
                         )
                     )
                 }
             )
+    }
+
+    private fun hashRefreshToken(refreshToken: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(refreshToken.toByteArray(Charsets.UTF_8))
+
+        return digest.joinToString("") { "%02x".format(it) }
     }
 }
