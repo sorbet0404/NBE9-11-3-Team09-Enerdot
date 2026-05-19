@@ -42,16 +42,17 @@ class ParkingApiClientConfig {
         return factory.createClient(SeoulParkingApiClient::class.java)
     }
 
-    @Bean  // ⭐ 별도 빈으로 등록
+    // [3] 카카오 위치 기반 API 호출
+    @Bean
     fun kakaoGeocodingRestClient(): RestClient =
         RestClient.builder()
             .baseUrl("https://dapi.kakao.com")
-            .defaultHeader("Accept", "application/json")  // ⭐ 헤더 명시
+            .defaultHeader("Accept", "application/json")
             .build()
 
     @Bean
     fun kakaoGeocodingClient(
-        kakaoGeocodingRestClient: RestClient  // ⭐ 파라미터 이름이 빈 이름과 일치해야 매칭됨
+        kakaoGeocodingRestClient: RestClient
     ): KakaoGeocodingClient {
         val adapter = RestClientAdapter.create(kakaoGeocodingRestClient)
         val factory = HttpServiceProxyFactory.builderFor(adapter).build()

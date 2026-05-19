@@ -17,7 +17,12 @@ import java.time.LocalDateTime
 @Entity
 @Table(
     name = "parking_spot",
-    indexes = [Index(name = "idx_parking_lot_status", columnList = "parking_lot_id, parking_spot_status")]
+    indexes = [
+        Index(name = "idx_parking_lot_status", columnList = "parking_lot_id, parking_spot_status"),
+        Index(
+            name = "idx_parking_spot_status_reserved_at",
+            columnList = "parking_spot_status, reserved_at"
+        )]
 )
 class ParkingSpot(
     @ManyToOne(fetch = FetchType.LAZY)

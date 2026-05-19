@@ -8,6 +8,11 @@ import org.springframework.stereotype.Service
 import org.locationtech.jts.geom.Point
 
 
+
+/*
+* 외부 API 호출에 트랜잭션을 걸어서 성능 저하 및 커넥션 풀 고갈이 되는거를 막기위해
+* 개별 저장시에만 트랜잭션 적용되도록 트랜잭션 범위를 좁혀 수정
+* */
 @Service
 class ParkingLotWriter(
     private val parkingLotRepository: ParkingLotRepository,
