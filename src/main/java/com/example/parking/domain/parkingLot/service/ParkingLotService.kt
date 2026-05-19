@@ -35,7 +35,7 @@ class ParkingLotService(
 
         return ParkingLotResDto.from(parkingLot)
     }
-    // [CUS-01] 주차장 반경 검색
+    // [CUS-13] 주차장 반경 검색
     fun findNearby(lat: Double, lng: Double, radius: Int): List<NearbyParkingLotResDto> {
         validateCoordinate(lat, lng, radius)
 
