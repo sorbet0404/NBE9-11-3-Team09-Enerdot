@@ -34,6 +34,7 @@ class PaymentRepositoryImpl(
             .selectFrom(payment)
             .join(payment.reservation, reservation).fetchJoin()
             .join(reservation.user, user).fetchJoin()
+            .orderBy(payment.createdAt.desc())
             .offset(pageable.offset)
             .limit(pageable.pageSize.toLong())
             .fetch()
