@@ -53,6 +53,7 @@ class PaymentRepositoryImpl(
             .join(payment.reservation, reservation).fetchJoin()
             .join(reservation.user, user).fetchJoin()
             .where(reservation.user.id.eq(userId))
+            .orderBy(payment.createdAt.desc())
             .offset(pageable.offset)
             .limit(pageable.pageSize.toLong())
             .fetch()
