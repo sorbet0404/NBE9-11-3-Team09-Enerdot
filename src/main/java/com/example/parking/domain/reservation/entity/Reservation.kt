@@ -9,7 +9,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "reservations")
+@Table(
+    name = "reservations",
+    uniqueConstraints = [
+        UniqueConstraint(columnNames = ["active_reservation_key"])
+    ]
+)
 @EntityListeners(AuditingEntityListener::class)
 class Reservation protected constructor(
 
@@ -56,6 +61,10 @@ class Reservation protected constructor(
     var paymentRequestedAt: LocalDateTime? = null
         protected set
 
+    @Column(name = "active_reservation_key", unique = true)
+    var activeReservationKey: String? = null
+        protected set
+
     fun startPayment() {
         this.paymentRequestedAt = LocalDateTime.now()
     }
@@ -63,6 +72,7 @@ class Reservation protected constructor(
     fun cancel() {
         this.status = ReservationStatus.CANCELED
         this.canceledAt = LocalDateTime.now()
+        this.activeReservationKey = null
     }
 
     fun confirm() {
@@ -75,6 +85,10 @@ class Reservation protected constructor(
 
     fun pending() {
         this.status = ReservationStatus.PENDING
+    }
+
+    fun deactivate() {
+        this.activeReservationKey = null
     }
 
     companion object {
@@ -90,6 +104,8 @@ class Reservation protected constructor(
             parkingSpot = parkingSpot,
             startTime = startTime,
             endTime = endTime
-        )
+        ).apply {
+            activeReservationKey = "${user.id}:${parkingLot.id}"
+        }
     }
 }

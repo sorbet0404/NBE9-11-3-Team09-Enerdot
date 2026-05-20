@@ -137,7 +137,7 @@ class ReservationService(
 
     private fun validateReservationOpenTime() {
         val hour = LocalDateTime.now(clock).hour
-        if (hour < 22) {
+        if (hour < 14) {
             throw IllegalStateException("예약은 매일 22시부터 24시까지만 가능합니다.")
         }
     }
