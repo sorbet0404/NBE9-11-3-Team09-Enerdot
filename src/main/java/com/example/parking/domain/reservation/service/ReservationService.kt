@@ -108,10 +108,10 @@ class ReservationService(
         val parkingLot = findParkingLot(reqDto.parkingLotId)
         val parkingSpot = findAndValidateSpot(reqDto, user)
 
-        val spot = reserveSpot(parkingSpot, reqDto.parkingSpotId)
+        validateNoOverlap(parkingSpot, start, end)
+        validateNoActiveReservation(userId, start)
 
-        validateNoOverlap(spot, start, end)
-        validateNoActiveReservation(userId, reqDto.parkingLotId)
+        val spot = reserveSpot(parkingSpot, reqDto.parkingSpotId)
 
         val savedReservation = reservationRepository.save(
             Reservation.of(user, parkingLot, spot, start, end)
@@ -133,13 +133,27 @@ class ReservationService(
         if (end.isBefore(start)) {
             throw IllegalArgumentException("종료 시간이 시작 시간보다 앞설 수 없습니다.")
         }
+
+        val today = LocalDateTime.now(clock).toLocalDate()
+        val startDate = start.toLocalDate()
+        val daysFromToday = java.time.temporal.ChronoUnit.DAYS.between(today, startDate)
+
+        // 내일(+1일), +4일~+6일만 허용 / +2일, +3일은 차단
+        if (daysFromToday == 2L || daysFromToday == 3L) {
+            throw IllegalStateException("해당 날짜는 아직 예약이 오픈되지 않았습니다.")
+        }
+
+        // +7일 이상은 차단
+        if (daysFromToday > 6L) {
+            throw IllegalArgumentException("예약은 최대 6일 후까지만 가능합니다.")
+        }
     }
 
     private fun validateReservationOpenTime() {
-        val hour = LocalDateTime.now(clock).hour
-        if (hour < 14) {
-            throw IllegalStateException("예약은 매일 22시부터 24시까지만 가능합니다.")
-        }
+//        val hour = LocalDateTime.now(clock).hour
+//        if (hour < 22) {
+//            throw IllegalStateException("예약은 매일 22시부터 24시까지만 가능합니다.")
+//        }
     }
 
     private fun findUser(userId: Long): User =
@@ -182,8 +196,8 @@ class ReservationService(
         if (updated == 0) {
             throw IllegalStateException("방금 다른 사용자가 선점했습니다. 다른 자리를 선택해주세요.")
         }
-        return parkingSpotRepository.findById(spotId)
-            .orElseThrow { IllegalArgumentException("존재하지 않는 주차 자리입니다.") }
+        parkingSpot.updateStatus(SpotStatus.OCCUPIED)
+        return parkingSpot
     }
 
     private fun validateNoOverlap(spot: ParkingSpot, start: LocalDateTime, end: LocalDateTime) {
@@ -195,14 +209,14 @@ class ReservationService(
         }
     }
 
-    private fun validateNoActiveReservation(userId: Long, parkingLotId: Long) {
+    private fun validateNoActiveReservation(userId: Long, start: LocalDateTime) {
         val activeStatuses = listOf(
             ReservationStatus.PENDING,
             ReservationStatus.CONFIRMED,
-            ReservationStatus.COMPLETED
+            ReservationStatus.COMPLETED  // 주차 중인 경우도 중복 불가
         )
-        if (reservationRepository.existsQByUserIdAndParkingLotIdAndStatusIn(userId, parkingLotId, activeStatuses)) {
-            throw IllegalStateException("이미 이 주차장에 진행 중인 예약이 존재합니다. 1주차장 당 1자리만 이용 가능합니다.")
+        if (reservationRepository.existsQByUserIdAndDateAndStatusIn(userId, start.toLocalDate(), activeStatuses)) {
+            throw IllegalStateException("해당 날짜에 이미 진행 중인 예약이 존재합니다. 하루에 1자리만 이용 가능합니다.")
         }
     }
 

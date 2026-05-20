@@ -19,6 +19,8 @@ import com.example.parking.domain.reservation.service.ReservationService
 import com.example.parking.global.sse.SseEmitterManager
 import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.temporal.ChronoUnit
@@ -99,18 +101,18 @@ class PaymentService(
     }
 
     @Transactional(readOnly = true)
-    fun getAllPayments(): List<PaymentAdminRespDto> =
-        paymentRepository.findAllWithReservationAndUser()
+    fun getAllPayments(pageable: Pageable): Page<PaymentAdminRespDto> =
+        paymentRepository.findAllWithReservationAndUserPaged(pageable)
             .map { PaymentAdminRespDto.from(it) }
 
     @Transactional(readOnly = true)
-    fun getPaymentsByUser(userId: Long): List<PaymentAdminRespDto> =
-        paymentRepository.findAllByUserIdWithReservationAndUser(userId)
+    fun getPaymentsByUser(userId: Long, pageable: Pageable): Page<PaymentAdminRespDto> =
+        paymentRepository.findAllByUserIdWithReservationAndUserPaged(userId, pageable)
             .map { PaymentAdminRespDto.from(it) }
 
     @Transactional(readOnly = true)
-    fun getPaymentsByStatus(status: PaymentStatus): List<PaymentAdminRespDto> =
-        paymentRepository.findAllByStatus(status)
+    fun getPaymentsByStatus(status: PaymentStatus, pageable: Pageable): Page<PaymentAdminRespDto> =
+        paymentRepository.findAllByStatusPaged(status, pageable)
             .map { PaymentAdminRespDto.from(it) }
 
     fun refundPayment(paymentId: Long): PaymentRespDto {
@@ -167,12 +169,16 @@ class PaymentService(
                 throw IllegalStateException("이미 결제 진행 중인 예약입니다.")
             }
             ReservationStatus.COMPLETED -> {
-                log.warn("결제 실패 - 이미 완료된 예약 reservationId: {}", reservation.id)
+                log.warn("결제 실패 - 이미 주차중인 예약 reservationId: {}", reservation.id)
                 throw IllegalStateException("이미 완료된 예약입니다.")
             }
             ReservationStatus.CANCELED -> {
                 log.warn("결제 실패 - 취소된 예약 reservationId: {}", reservation.id)
                 throw IllegalStateException("취소된 예약은 결제할 수 없습니다.")
+            }
+            ReservationStatus.FINISHED -> {
+                log.warn("결제 실패 - 이미 완료된 예약 reservationId: {}", reservation.id)
+                throw IllegalStateException("이미 완료된 예약입니다.")
             }
         }
     }
