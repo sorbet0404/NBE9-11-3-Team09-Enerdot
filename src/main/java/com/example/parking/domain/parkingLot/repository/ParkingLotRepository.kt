@@ -29,8 +29,8 @@ interface ParkingLotRepository : JpaRepository<ParkingLot, Long>, ParkingLotRepo
                 p.price                       AS price,
                 p.operation_start_time        AS operationStartTime,
                 p.operation_end_time          AS operationEndTime,
-                ST_Y(p.location)              AS latitude,
-                ST_X(p.location)              AS longitude,
+                ST_Latitude(p.location) AS latitude,
+                ST_Longitude(p.location) AS longitude,
                 ST_Distance_Sphere(
                     p.location,
                     ST_SRID(POINT(:lng, :lat), 4326)
