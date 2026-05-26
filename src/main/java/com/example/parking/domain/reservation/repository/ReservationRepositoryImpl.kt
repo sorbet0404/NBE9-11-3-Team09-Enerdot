@@ -34,27 +34,45 @@ class ReservationRepositoryImpl(
             .fetchOne()
     }
 
-    // 예약 단건 조회 (주차 자리 + 주차장 포함)
+    // 예약 단건 조회 (주차 자리 + 주차장 + 유저 포함)
     override fun findQByIdWithParkingSpot(id: Long): Reservation? {
         return queryFactory
             .selectFrom(reservation)
+            .join(reservation.user, user).fetchJoin()
             .join(reservation.parkingSpot, parkingSpot).fetchJoin()
             .join(parkingSpot.parkingLot, parkingLot).fetchJoin()
             .where(reservation.id.eq(id))
             .fetchOne()
     }
 
-    // [CUS-04] 사용자 예약 목록 조회 - status 동적 필터링
-    override fun findQAllByUserIdWithDetails(userId: Long, status: ReservationStatus?): List<Reservation> {
-        return queryFactory
+    // [CUS-04] 사용자 예약 목록 조회 - status 동적 필터링 + 페이징
+    override fun findQAllByUserIdWithDetails(userId: Long, status: ReservationStatus?, pageable: Pageable): Page<Reservation> {
+        val orderSpecifiers = getOrderSpecifiers(pageable)
+
+        val content = queryFactory
             .selectFrom(reservation)
+            .join(reservation.user, user).fetchJoin()
             .join(reservation.parkingLot, parkingLot).fetchJoin()
             .join(reservation.parkingSpot, parkingSpot).fetchJoin()
             .where(
                 reservation.user.id.eq(userId),
                 status?.let { reservation.status.eq(it) }
             )
+            .orderBy(*orderSpecifiers)
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
             .fetch()
+
+        return PageableExecutionUtils.getPage(content, pageable) {
+            queryFactory
+                .select(reservation.count())
+                .from(reservation)
+                .where(
+                    reservation.user.id.eq(userId),
+                    status?.let { reservation.status.eq(it) }
+                )
+                .fetchOne() ?: 0L
+        }
     }
 
     // [ADM] 관리자 - 특정 유저 예약 목록 페이징 조회

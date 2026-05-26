@@ -18,6 +18,8 @@ import com.example.parking.domain.user.repository.UserRepository
 import com.example.parking.global.sse.SseEmitterManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -44,8 +46,8 @@ class ReservationService(
     private val log = LoggerFactory.getLogger(ReservationService::class.java)
 
     // [CUS-04] 내 예약 목록 조회
-    fun getMyReservations(userId: Long, status: ReservationStatus?): List<ReservationResDto> =
-        reservationRepository.findQAllByUserIdWithDetails(userId, status)
+    fun getMyReservations(userId: Long, status: ReservationStatus?, pageable: Pageable): Page<ReservationResDto> =
+        reservationRepository.findQAllByUserIdWithDetails(userId, status, pageable)
             .map { ReservationResDto.from(it) }
 
     // [CUS-04] 내 특정 예약 상세 조회

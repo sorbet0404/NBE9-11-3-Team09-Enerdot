@@ -113,10 +113,10 @@ class ReservationServiceTest @Autowired constructor(
             .andExpect(handler().handlerType(ReservationController::class.java))
             .andExpect(handler().methodName("getList"))
             .andExpect(jsonPath("$.resultCode").value("200-1"))
-            .andExpect(jsonPath("$.data.length()").value(1))
-            .andExpect(jsonPath("$.data[0].parkingLotName").value("강남역 공영 주차장"))
-            .andExpect(jsonPath("$.data[0].parkingSpotNumber").value("A-01"))
-            .andExpect(jsonPath("$.data[0].status").value("PENDING"))
+            .andExpect(jsonPath("$.data.content.length()").value(1))
+            .andExpect(jsonPath("$.data.content[0].parkingLotName").value("강남역 공영 주차장"))
+            .andExpect(jsonPath("$.data.content[0].parkingSpotNumber").value("A-01"))
+            .andExpect(jsonPath("$.data.content[0].status").value("PENDING"))
     }
 
     @Test
@@ -129,7 +129,7 @@ class ReservationServiceTest @Autowired constructor(
         )
             .andDo(print())
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.length()").value(0))
+            .andExpect(jsonPath("$.data.content.length()").value(0))
     }
 
     @Test

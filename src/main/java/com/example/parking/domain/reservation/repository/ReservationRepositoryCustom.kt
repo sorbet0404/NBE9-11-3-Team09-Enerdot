@@ -12,7 +12,7 @@ interface ReservationRepositoryCustom {
 
     fun findQByIdWithParkingSpot(id: Long): Reservation?
 
-    fun findQAllByUserIdWithDetails(userId: Long, status: ReservationStatus?): List<Reservation>
+    fun findQAllByUserIdWithDetails(userId: Long, status: ReservationStatus?, pageable: Pageable): Page<Reservation>
 
     fun findQAllByUserIdWithDetailsPage(userId: Long, pageable: Pageable): Page<Reservation>
 

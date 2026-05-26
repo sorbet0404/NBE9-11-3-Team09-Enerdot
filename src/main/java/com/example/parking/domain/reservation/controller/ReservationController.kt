@@ -10,6 +10,10 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -28,9 +32,10 @@ class ReservationController(
     @GetMapping
     fun getList(
         @AuthenticationPrincipal userDetails: CustomUserDetails,
-        @RequestParam(required = false) status: ReservationStatus?
-    ): ResponseEntity<RsData<List<ReservationResDto>>> {
-        val data = reservationService.getMyReservations(userDetails.userId, status)
+        @RequestParam(required = false) status: ReservationStatus?,
+        @PageableDefault(size = 10, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable
+    ): ResponseEntity<RsData<Page<ReservationResDto>>> {
+        val data = reservationService.getMyReservations(userDetails.userId, status, pageable)
         return ResponseEntity.ok(RsData("예약 목록 조회가 완료되었습니다.", "200-1", data))
     }
 
