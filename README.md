@@ -95,3 +95,55 @@ src
 | 이현태 | Parking Spot 도메인 |
 | 최민호 | User 도메인 |
 | 황지윤 | Parking lot 도메인 |
+
+## 🔧 트러블슈팅
+
+### SSE 알림 발송 위치 재조정
+
+**문제**
+
+예약 생성 및 취소 흐름에서 SSE 알림을 트랜잭션 **중간에** 직접 발송하고 있었습니다.
+트랜잭션이 커밋되기 전에 알림이 나가기 때문에, 이후 예외가 발생해 롤백되면 실제 서버 상태와 클라이언트가 받은 알림이 불일치하는 문제가 생길 수 있었습니다.
+
+**원인**
+
+```kotlin
+// 수정 전 — 트랜잭션 중간에 직접 호출
+reservation.cancel()
+sseEmitterManager.notify(lotId, ParkingSpotDto(spot)) // 커밋 보장 없음
+```
+
+**해결**
+
+`TransactionSynchronizationManager.registerSynchronization`의 `afterCommit()`을 활용해, 트랜잭션이 성공적으로 커밋된 이후에만 알림이 발송되도록 수정했습니다.
+
+```kotlin
+// 수정 후
+TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
+    override fun afterCommit() {
+        sseEmitterManager.notify(lotId, ParkingSpotDto(spot))
+    }
+})
+```
+
+**결과**
+
+DB 상태 변경이 확정된 이후에만 클라이언트에 알림이 전달되어, 롤백 시 잘못된 상태 정보가 전파되는 문제를 차단했습니다.
+
+### 동시성 제어 방식 선택 — 성능 테스트 시나리오 오류 발견 및 재검증
+
+**문제**
+
+2차 프로젝트에서 비관락과 CAS 방식의 성능을 비교했을 때 CAS 50ms, 비관락 400ms대로 CAS가 압도적으로 유리했습니다. 그러나 수치가 지나치게 차이 나는 것이 의심스러워 시나리오를 재확인했습니다.
+
+**원인**
+
+테스트 시나리오가 **동일한 유저 1명이 같은 자리를 250번 반복 요청**하는 구조였습니다. 실제 서비스에서는 한 유저가 같은 자리를 반복 선점할 이유가 없고, 비관락 특성상 동일 세션의 재진입에는 락 경쟁이 거의 발생하지 않아 결과가 왜곡됐습니다.
+
+**해결**
+
+3차 프로젝트에서 **서로 다른 유저 250명이 동시에 하나의 자리를 선점하는 시나리오**로 재설계했습니다. 실제 락 경쟁이 발생하는 조건에서 재측정한 결과, CAS가 비관락 대비 약 30ms 빠른 것을 확인했습니다.
+
+**결과**
+
+현실에 가까운 시나리오로 재검증했으며, 잘못 설계된 벤치마크가 기술 선택 판단에 영향을 미칠 수 있다는 점을 체감했습니다.
