@@ -97,7 +97,6 @@ class ReservationService(
         }
     }
 
-    // [CUS-03] 예약 생성
     @Transactional
     fun createReservation(userId: Long, reqDto: ReservationReqDto): ReservationResDto {
         val start = reqDto.getParsedStartTime()
@@ -110,10 +109,11 @@ class ReservationService(
         val parkingLot = findParkingLot(reqDto.parkingLotId)
         val parkingSpot = findAndValidateSpot(reqDto, user)
 
-        validateNoOverlap(parkingSpot, start, end)
-        validateNoActiveReservation(userId, start)
-
+        // CAS 먼저
         val spot = reserveSpot(parkingSpot, reqDto.parkingSpotId)
+
+        validateNoOverlap(spot, start, end)
+        validateNoActiveReservation(userId, start)
 
         val savedReservation = reservationRepository.save(
             Reservation.of(user, parkingLot, spot, start, end)
@@ -125,7 +125,6 @@ class ReservationService(
 
         return ReservationResDto.from(savedReservation)
     }
-
 // ==================== private 메서드 ====================
 
     private fun validateTime(start: LocalDateTime, end: LocalDateTime) {
